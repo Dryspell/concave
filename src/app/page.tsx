@@ -1,16 +1,17 @@
 "use client";
 import { SignInButton, SignOutButton, auth, useSession } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export default function Home() {
 	const { isSignedIn } = useSession();
 
 	const createThumbnail = useMutation(api.thumbnails.createThumbnail);
+	const thumbnails = useQuery(api.thumbnails.getThumbnailsForUser);
 
 	return (
 		<main className="flex min-h-screen flex-col items-center justify-between p-24">
-			{isSignedIn ? (
+			{isSignedIn && (
 				<div>
 					<form
 						onSubmit={(e) => {
@@ -30,10 +31,14 @@ export default function Home() {
 						/>
 						<button type="submit">Create</button>
 					</form>
-					<SignOutButton />
+
+					{thumbnails?.map((thumbnail) => (
+						<div key={thumbnail._id}>
+							<h2>{thumbnail.title}</h2>
+							{/* <img src={thumbnail.url} /> */}
+						</div>
+					))}
 				</div>
-			) : (
-				<SignInButton />
 			)}
 		</main>
 	);
