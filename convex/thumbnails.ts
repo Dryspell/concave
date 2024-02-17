@@ -1,11 +1,10 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-export const createThumbnail = mutation({
+export const createThumbnailTest = mutation({
 	args: {
 		title: v.string(),
-		aImage: v.string(),
-		bImage: v.string(),
+		images: v.array(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const user = await ctx.auth.getUserIdentity();
@@ -15,8 +14,7 @@ export const createThumbnail = mutation({
 		return await ctx.db.insert("thumbnails", {
 			title: args.title,
 			userId: user.subject,
-			aImage: args.aImage,
-			bImage: args.bImage,
+			images: args.images,
 		});
 	},
 });

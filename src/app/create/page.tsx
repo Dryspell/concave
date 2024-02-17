@@ -2,7 +2,6 @@
 
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { UploadFileResponse } from "@xixixao/uploadstuff";
 import { UploadButton } from "@xixixao/uploadstuff/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ function ImageUploadForm(props: {
 			})}
 		>
 			<h2 className="2xl font-bold">{title}</h2>
-			{images[index] && (
+			{images[index] ? (
 				<Image
 					style={{ width: "100%", height: "100%" }}
 					height={300}
@@ -56,40 +55,42 @@ function ImageUploadForm(props: {
 					alt={title}
 					className="w-full h-64 object-cover rounded-lg"
 				/>
-			)}
-			<UploadButton
-				uploadUrl={generateUploadUrl}
-				fileTypes={["image/*"]}
-				onUploadBegin={() => {
-					console.log("uploading...");
-				}}
-				onUploadComplete={(uploaded) => {
-					console.log(
-						`UploadResponse: ${JSON.stringify(
-							uploaded[0].response
-						)}`
-					);
-					if (!isStorageIdResponse(uploaded[0].response)) {
-						console.error(
-							"Expected a storageId in the response, but got something else"
+			) : (
+				<UploadButton
+					uploadUrl={generateUploadUrl}
+					fileTypes={["image/*"]}
+					onUploadBegin={() => {
+						console.log("uploading...");
+					}}
+					onUploadComplete={(uploaded) => {
+						console.log(
+							`UploadResponse: ${JSON.stringify(
+								uploaded[0].response
+							)}`
 						);
-						return;
-					}
+						if (!isStorageIdResponse(uploaded[0].response)) {
+							console.error(
+								"Expected a storageId in the response, but got something else"
+							);
+							return;
+						}
 
-					setImages((images) =>
-						images.map((image, i) =>
-							i === index &&
-							isStorageIdResponse(uploaded[0].response)
-								? uploaded[0].response.storageId
-								: image
-						)
-					);
-				}}
-				onUploadError={(error: unknown) => {
-					// Do something with the error.
-					alert(`ERROR! ${error}`);
-				}}
-			/>
+						setImages((images) =>
+							images.map((image, i) =>
+								i === index &&
+								isStorageIdResponse(uploaded[0].response)
+									? uploaded[0].response.storageId
+									: image
+							)
+						);
+					}}
+					onUploadError={(error: unknown) => {
+						// Do something with the error.
+						alert(`ERROR! ${error}`);
+					}}
+				/>
+			)}
+
 			{props.errors[`${alphabet[index]}Image`] && (
 				<div className="text bg-red-500">
 					{props.errors[`${alphabet[index]}Image`]}
@@ -105,7 +106,7 @@ export default function CreatePage() {
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const createThumbnail = useMutation(api.thumbnails.createThumbnail);
+	const createThumbnailTest = useMutation(api.thumbnails.createThumbnailTest);
 
 	useEffect(() => {
 		console.log({ images });
@@ -127,14 +128,14 @@ export default function CreatePage() {
 					const form = e.target as HTMLFormElement;
 					const formData = new FormData(form);
 					const title = formData.get("title") as string;
-					!title &&
-						setErrors((prev) => ({ ...prev, title: "required" }));
-					!images[0] &&
-						setErrors((prev) => ({ ...prev, aImage: "required" }));
-					!images[1] &&
-						setErrors((prev) => ({ ...prev, bImage: "required" }));
+					const formErrors = {
+						...(!title && { title: "required" }),
+						...(!images[0] && { aImage: "required" }),
+						...(!images[1] && { bImage: "required" }),
+					};
+					setErrors((prev) => ({ ...prev, ...formErrors }));
 
-					if (Object.keys(errors).length) {
+					if (Object.keys(formErrors).length) {
 						toast({
 							title: "Error",
 							description: "Please fill out all fields",
@@ -143,12 +144,11 @@ export default function CreatePage() {
 						return;
 					}
 
-					const thumbnailId = await createThumbnail({
-						aImage: images[0],
-						bImage: images[1],
+					const thumbnailId = await createThumbnailTest({
 						title,
+						images,
 					});
-					router.push(`/thumbnail/${thumbnailId}`);
+					router.push(`/thumbnails/${thumbnailId}`);
 				}}
 			>
 				<div className="flex flex-col gap-4 mb-8">
@@ -156,6 +156,7 @@ export default function CreatePage() {
 					<Input
 						required
 						id="title"
+						name="title"
 						type="text"
 						placeholder="Label your Test for easy reference"
 						className={clsx({
