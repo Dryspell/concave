@@ -15,7 +15,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as files from "../files.js";
-import type * as thumbnails from "../thumbnails.js";
+import type * as thumbnail_tests from "../thumbnail_tests.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -27,7 +27,7 @@ import type * as thumbnails from "../thumbnails.js";
  */
 declare const fullApi: ApiFromModules<{
   files: typeof files;
-  thumbnails: typeof thumbnails;
+  thumbnail_tests: typeof thumbnail_tests;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

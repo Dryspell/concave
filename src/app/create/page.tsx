@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
+import { getImageUrl } from "../../lib/utils";
+import { alphabet } from "@/lib/contants";
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz";
 const defaultErrors = (images: string[]) => {
 	const errors: Record<string, string> = {};
 	return errors;
@@ -51,7 +52,7 @@ function ImageUploadForm(props: {
 					style={{ width: "100%", height: "100%" }}
 					height={300}
 					width={400}
-					src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${images[index]}`}
+					src={getImageUrl(images[index])}
 					alt={title}
 					className="w-full h-64 object-cover rounded-lg"
 				/>
@@ -106,7 +107,9 @@ export default function CreatePage() {
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const createThumbnailTest = useMutation(api.thumbnails.createThumbnailTest);
+	const createThumbnailTest = useMutation(
+		api.thumbnail_tests.createThumbnailTest
+	);
 
 	useEffect(() => {
 		console.log({ images });
@@ -144,11 +147,11 @@ export default function CreatePage() {
 						return;
 					}
 
-					const thumbnailId = await createThumbnailTest({
+					const thumbnailTestId = await createThumbnailTest({
 						title,
 						images,
 					});
-					router.push(`/thumbnails/${thumbnailId}`);
+					router.push(`/tests/${thumbnailTestId}`);
 				}}
 			>
 				<div className="flex flex-col gap-4 mb-8">

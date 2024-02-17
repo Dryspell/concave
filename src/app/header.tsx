@@ -8,15 +8,26 @@ export function Header() {
 	return (
 		<div className="border-b">
 			<div className="h-16 container flex justify-between items-center">
-				<div>Thumbnail Rater</div>
+				<Link className="link" href="/">
+					Thumbnail Rater
+				</Link>
 
-				<div>
+				<div className="flex gap-8">
 					<SignedIn>
-						<Link href="/create">Create Test</Link>
+						<Link className="link" href="/create">
+							Create Test
+						</Link>
+						<Link className="link" href="/dashboard">
+							Dashboard
+						</Link>
 					</SignedIn>
 					<SignedOut>
-						<Link href="/about">About</Link>
-						<Link href="pricing">Pricing</Link>
+						<Link className="link" href="/about">
+							About
+						</Link>
+						<Link className="link" href="pricing">
+							Pricing
+						</Link>
 					</SignedOut>
 				</div>
 
