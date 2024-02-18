@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { clerkClient } from "@clerk/nextjs";
 
 export const createThumbnailTest = mutation({
 	args: {
@@ -26,6 +27,26 @@ export const getThumbnailsTestById = query({
 	},
 	handler: async (ctx, args) => {
 		return await ctx.db.get(args.testId);
+	},
+});
+
+export const getRecentThumbnailTests = query({
+	args: {},
+	handler: async (ctx, args) => {
+		const tests = await ctx.db
+			.query("thumbnail_tests")
+			.order("desc")
+			.take(20);
+
+		const users = await Promise.all(
+			Array.from(new Set(tests.map((test) => test.userId))).map(
+				(userId) => clerkClient.users.getUser(userId)
+			)
+		);
+		return tests.map((test) => ({
+			...test,
+			user: users.find((u) => u.id === test.userId),
+		}));
 	},
 });
 

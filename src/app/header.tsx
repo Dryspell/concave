@@ -20,6 +20,9 @@ export function Header() {
 						<Link className="link" href="/dashboard">
 							Dashboard
 						</Link>
+						<Link className="link" href="/explore">
+							Explore
+						</Link>
 					</SignedIn>
 					<SignedOut>
 						<Link className="link" href="/about">
