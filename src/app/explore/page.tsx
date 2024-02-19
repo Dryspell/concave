@@ -64,7 +64,10 @@ export default function ExplorePage() {
 										new Date(test._creationTime),
 										new Date(),
 										{ addSuffix: true }
-									)}`}
+									)} by ${
+										test.user?.preferredUsername ||
+										test.user?.name
+									}`}
 								</p>
 							</CardFooter>
 						</Card>

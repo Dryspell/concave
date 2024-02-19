@@ -15,7 +15,10 @@ export default defineSchema({
 		voterIds: v.optional(v.array(v.string())),
 	}),
 	users: defineTable({
-		name: v.string(),
+		id: v.string(),
 		tokenIdentifier: v.string(),
+		name: v.string(),
+		preferredUsername: v.optional(v.string()),
+		pictureUrl: v.optional(v.string()),
 	}).index("by_token", ["tokenIdentifier"]),
 });

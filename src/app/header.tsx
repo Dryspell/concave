@@ -3,8 +3,11 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "./mode-toggle";
 import Link from "next/link";
+import useStoreUserEffect from "@/hooks/useStoreUserEffect";
 
 export function Header() {
+	const userId = useStoreUserEffect();
+
 	return (
 		<div className="border-b">
 			<div className="h-16 container flex justify-between items-center">
