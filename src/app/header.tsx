@@ -6,7 +6,7 @@ import Link from "next/link";
 import useStoreUserEffect from "@/hooks/useStoreUserEffect";
 
 export function Header() {
-	const userId = useStoreUserEffect();
+	useStoreUserEffect();
 
 	return (
 		<div className="border-b">

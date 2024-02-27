@@ -13,19 +13,11 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { getImageUrl } from "../../lib/utils";
 import { alphabet } from "@/lib/contants";
+import { isStorageIdResponse } from "./utils";
 
 const defaultErrors = (images: string[]) => {
 	const errors: Record<string, string> = {};
 	return errors;
-};
-
-export const isStorageIdResponse = (
-	response: unknown
-): response is { storageId: string } => {
-	if (typeof response !== "object" || response === null) {
-		return false;
-	}
-	return "storageId" in response;
 };
 
 function ImageUploadForm(props: {
