@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 
 export const createThumbnailTest = mutation({
 	args: {
@@ -30,28 +31,31 @@ export const getThumbnailsTestById = query({
 });
 
 export const getRecentThumbnailTests = query({
-	args: {},
+	args: { paginationOpts: paginationOptsValidator },
 	handler: async (ctx, args) => {
 		const tests = await ctx.db
 			.query("thumbnail_tests")
 			.order("desc")
-			.take(20);
+			.paginate(args.paginationOpts);
 
 		const users = await Promise.all(
-			Array.from(new Set(tests.map((test) => test.userId))).map(
-				(userId) =>
-					ctx.db
-						.query("users")
-						.withIndex("by_token", (q) =>
-							q.eq("tokenIdentifier", userId)
-						)
-						.unique()
+			[...new Set(tests.page.map((test) => test.userId))].map((userId) =>
+				ctx.db
+					.query("users")
+					.withIndex("by_token", (q) =>
+						q.eq("tokenIdentifier", userId)
+					)
+					.unique()
 			)
 		);
-		return tests.map((test) => ({
-			...test,
-			user: users.find((u) => u?.tokenIdentifier === test.userId),
-		}));
+
+		return {
+			...tests,
+			page: tests.page.map((test) => ({
+				...test,
+				user: users.find((u) => u?.tokenIdentifier === test.userId),
+			})),
+		};
 	},
 });
 
