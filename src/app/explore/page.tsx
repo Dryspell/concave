@@ -104,17 +104,14 @@ export default function ExplorePage() {
 								</P>
 							</CardContent>
 							<CardFooter>
-								<div>
-									<P>
-										{`Created: ${formatDistance(
-											new Date(test._creationTime),
-											new Date(),
-											{ addSuffix: true }
-										)}`}
-									</P>
-								</div>
+								<P>
+									{`Created: ${formatDistance(
+										new Date(test._creationTime),
+										new Date(),
+										{ addSuffix: true }
+									)}`}
+								</P>
 								<Button
-									asChild
 									className="w-full"
 									variant={
 										hasVoted(test, session)

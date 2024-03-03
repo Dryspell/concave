@@ -4,9 +4,21 @@ import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "./mode-toggle";
 import Link from "next/link";
 import useStoreUserEffect from "@/hooks/useStoreUserEffect";
+import { Button } from "@/components/ui/button";
+import { useAction, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useRouter } from "next/navigation";
 
 export function Header() {
 	useStoreUserEffect();
+	const router = useRouter();
+
+	const pay = useAction(api.stripe.pay);
+
+	const handleUpgradeClick = async () => {
+		const url = await pay();
+		url && router.push(url);
+	};
 
 	return (
 		<div className="border-b">
@@ -39,6 +51,7 @@ export function Header() {
 
 				<div className="flex gap-4 items-center">
 					<SignedIn>
+						<Button onClick={handleUpgradeClick}>Upgrade</Button>
 						<UserButton />
 					</SignedIn>
 					<SignedOut>

@@ -1,4 +1,43 @@
-import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+import { internalMutation, mutation } from "./_generated/server";
+
+export const createUser = internalMutation({
+	args: {
+		user: v.object({
+			id: v.string(),
+			name: v.string(),
+			preferredUsername: v.optional(v.string()),
+			pictureUrl: v.optional(v.string()),
+			tokenIdentifier: v.string(),
+			email: v.optional(v.string()),
+		}),
+	},
+	handler: async (ctx, args) => {
+		return await ctx.db.insert("users", {
+			...args.user,
+		});
+	},
+});
+
+export const setStripeId = internalMutation({
+	args: {
+		userId: v.string(),
+		stripeId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_userid", (q) => q.eq("id", args.userId))
+			.unique();
+		if (!user) {
+			throw new Error("User not found");
+		}
+
+		return await ctx.db.patch(user._id, {
+			stripeId: args.stripeId,
+		});
+	},
+});
 
 /**
  * Insert or update the user in a Convex table then return the document's ID.
