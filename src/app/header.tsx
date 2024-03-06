@@ -8,16 +8,32 @@ import { Button } from "@/components/ui/button";
 import { useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/navigation";
+import useDetailedAction from "@/hooks/useDetailedAction";
 
 export function Header() {
 	useStoreUserEffect();
 	const router = useRouter();
 
-	const pay = useAction(api.stripe.pay);
+	// const getPaymentUrl = useAction(api.stripe.getPaymentUrl);
+
+	const { isLoading: paymentUrlLoading, mutate: getDetailedPaymentUrl } =
+		useDetailedAction(api.stripe.getPaymentUrl, {
+			onSuccess: (url) => {
+				console.log(`Received Stripe Url: ${url}`);
+				url &&
+					typeof window !== "undefined" &&
+					window.open(url, "_blank");
+			},
+			onError: (error) => {
+				console.error(error);
+			},
+			onMutate: (params) => {
+				console.log(`mutating...`, params);
+			},
+		});
 
 	const handleUpgradeClick = async () => {
-		const url = await pay();
-		url && router.push(url);
+		getDetailedPaymentUrl();
 	};
 
 	return (
@@ -51,7 +67,12 @@ export function Header() {
 
 				<div className="flex gap-4 items-center">
 					<SignedIn>
-						<Button onClick={handleUpgradeClick}>Upgrade</Button>
+						<Button
+							disabled={paymentUrlLoading}
+							onClick={handleUpgradeClick}
+						>
+							{!paymentUrlLoading ? "Upgrade" : "Loading..."}
+						</Button>
 						<UserButton />
 					</SignedIn>
 					<SignedOut>

@@ -2,19 +2,14 @@
 
 import { v } from "convex/values";
 import Stripe from "stripe";
-
 import { internal } from "./_generated/api";
 import { action, internalAction } from "./_generated/server";
-
-type Metadata = {
-	userId: string;
-};
 
 const priceIds = {
 	thumbnailRater: "price_1OqKUhCv4rZu5wGcHYjLQG8k",
 };
 
-export const pay = action({
+export const getPaymentUrl = action({
 	args: {},
 	handler: async (ctx, args) => {
 		const user = await ctx.auth.getUserIdentity();
