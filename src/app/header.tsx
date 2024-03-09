@@ -3,7 +3,7 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "./mode-toggle";
 import Link from "next/link";
-import useStoreUserEffect from "@/hooks/useStoreUserEffect";
+import useStableDbUser from "@/hooks/useStoreUserEffect";
 import { Button } from "@/components/ui/button";
 import { useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -11,12 +11,14 @@ import { useRouter } from "next/navigation";
 import useDetailedAction from "@/hooks/useDetailedAction";
 
 export function Header() {
-	useStoreUserEffect();
+	const user = useStableDbUser();
 	const router = useRouter();
+
+	const isSubscribed = user && (user.subscriptionExpirey ?? 0 > Date.now());
 
 	// const getPaymentUrl = useAction(api.stripe.getPaymentUrl);
 
-	const { isLoading: paymentUrlLoading, mutate: getDetailedPaymentUrl } =
+	const { mutate: getDetailedPaymentUrl, isLoading: paymentUrlLoading } =
 		useDetailedAction(api.stripe.getPaymentUrl, {
 			onSuccess: (url) => {
 				console.log(`Received Stripe Url: ${url}`);
@@ -67,12 +69,14 @@ export function Header() {
 
 				<div className="flex gap-4 items-center">
 					<SignedIn>
-						<Button
-							disabled={paymentUrlLoading}
-							onClick={handleUpgradeClick}
-						>
-							{!paymentUrlLoading ? "Upgrade" : "Loading..."}
-						</Button>
+						{!isSubscribed && (
+							<Button
+								disabled={paymentUrlLoading}
+								onClick={handleUpgradeClick}
+							>
+								{!paymentUrlLoading ? "Upgrade" : "Loading..."}
+							</Button>
+						)}
 						<UserButton />
 					</SignedIn>
 					<SignedOut>

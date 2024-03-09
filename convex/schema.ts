@@ -21,8 +21,10 @@ export default defineSchema({
 		preferredUsername: v.optional(v.string()),
 		email: v.optional(v.string()),
 		pictureUrl: v.optional(v.string()),
-		stripeId: v.optional(v.string()),
+		subscriptionId: v.optional(v.string()),
+		subscriptionExpirey: v.optional(v.number()),
 	})
 		.index("by_token", ["tokenIdentifier"])
-		.index("by_userid", ["id"]),
+		.index("by_userid", ["id"])
+		.index("by_subscriptionId", ["subscriptionId"]),
 });

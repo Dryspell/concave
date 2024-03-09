@@ -59,29 +59,60 @@ export const fulfill = internalAction({
 			// const metadata = event.data.object.metadata as Metadata;
 
 			switch (event.type) {
-				case "checkout.session.completed":
+				case "checkout.session.completed": {
 					const userId = event.data.object.metadata?.userId;
 					if (!userId) {
 						throw new Error("No userId in checkout session");
 					}
 
+					const subscription = await stripe.subscriptions.retrieve(
+						event.data.object.subscription as string
+					);
+
 					const mutationResult = await ctx.runMutation(
-						internal.users.setStripeId,
+						internal.users.setSubscriptionId,
 						{
 							userId,
-							stripeId: event.id as string,
+							subscriptionId: subscription.id,
+							subscriptionExpirey:
+								subscription.current_period_end * 1000,
 						}
 					);
 
 					return { success: true };
+				}
 
-				case "payment_intent.succeeded":
+				case "payment_intent.succeeded": {
 					console.log("Payment intent succeeded");
 					console.log(event);
 					// await ctx.runMutation(internal.users.addCredits, {
 					// 	userId: metadata.userId,
 					// 	amount: event.data.object.amount,
 					// });
+					return { success: true };
+				}
+
+				case "invoice.payment_succeeded": {
+					console.log("Invoice payment succeeded");
+
+					const subscription = await stripe.subscriptions.retrieve(
+						event.data.object.subscription as string
+					);
+
+					await ctx.runMutation(
+						internal.users.updateSubscriptionBySubId,
+						{
+							subscriptionId: subscription.id,
+							subscriptionExpirey:
+								subscription.current_period_end * 1000,
+						}
+					);
+
+					return { success: true };
+				}
+
+				default:
+					console.log(`Unhandled event type: ${event.type}`);
 					return { success: true };
 			}
 		} catch (err) {
