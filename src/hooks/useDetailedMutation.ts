@@ -13,12 +13,7 @@ export default function useDetailedMutation<
 	MutationType extends FunctionReference<"mutation", "public", any, any>
 >(
 	mutation: Parameters<typeof useMutation<MutationType>>[0],
-	{
-		onSuccess,
-		onMutate,
-		onError,
-		optimisticUpdate,
-	}: {
+	options?: {
 		onSuccess?: (result: FunctionReturnType<MutationType>) => void;
 		onMutate?: (mutationParams: FunctionArgs<MutationType>) => void;
 		onError?: (error: Error) => void;
@@ -26,29 +21,29 @@ export default function useDetailedMutation<
 	}
 ) {
 	const doMutation = useMutation(mutation).withOptimisticUpdate(
-		optimisticUpdate ?? (() => {})
+		options?.optimisticUpdate ?? (() => {})
 	);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [data, setData] =
 		React.useState<FunctionReturnType<MutationType>>(undefined);
 
 	const mutate = React.useCallback(
-		(...mutationParams: FunctionArgs<MutationType>) => {
-			onMutate?.(mutationParams);
+		(mutationParams: FunctionArgs<MutationType>) => {
+			options?.onMutate?.(mutationParams);
 			setIsLoading(() => true);
 
-			doMutation(...mutationParams)
+			doMutation(mutationParams)
 				.then((mutationResult) => {
 					setData(() => mutationResult);
-					onSuccess?.(mutationResult);
+					options?.onSuccess?.(mutationResult);
 					setIsLoading(() => false);
 				})
 				.catch((error: Error) => {
-					onError?.(error);
+					options?.onError?.(error);
 					setIsLoading(() => false);
 				});
 		},
-		[doMutation, onError, onSuccess, onMutate]
+		[doMutation, options?.onError, options?.onSuccess, options?.onMutate]
 	);
 
 	return { data: data, isLoading: isLoading, mutate };

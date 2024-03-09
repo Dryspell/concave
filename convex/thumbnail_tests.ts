@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
 import { isUserSubscribed } from "./users";
+import { getUsersByIdsUtil } from "./utils";
 
 export const createThumbnailTest = mutation({
 	args: {
@@ -13,16 +14,63 @@ export const createThumbnailTest = mutation({
 		if (!user) {
 			throw new Error("You must be logged in to create a thumbnail");
 		}
-
-		if (!(await isUserSubscribed(ctx))) {
-			throw new Error("You must be subscribed to create a thumbnail");
+		const dbUser = await getUsersByIdsUtil(ctx, [
+			user.tokenIdentifier,
+		]).then((res) => res[0]);
+		if (!dbUser) {
+			throw new Error("User not found");
 		}
 
-		return await ctx.db.insert("thumbnail_tests", {
-			title: args.title,
-			userId: user.tokenIdentifier,
-			images: args.images.map((id) => ({ id })),
-			voterIds: [],
+		// if (!(await isUserSubscribed(ctx))) {
+		// 	throw new Error("You must be subscribed to create a thumbnail");
+		// }
+
+		if ((dbUser?.credits ?? 0) < 1) {
+			throw new Error(
+				"You don't have enough credits to create a thumbnail"
+			);
+		}
+
+		const [creditsPatch, newThumbnailTest] = await Promise.all([
+			ctx.db.patch(dbUser._id, {
+				credits: Math.max(0, (dbUser?.credits ?? 0) - 1),
+			}),
+			ctx.db.insert("thumbnail_tests", {
+				title: args.title,
+				userId: user.tokenIdentifier,
+				images: args.images.map((id) => ({ id })),
+				voterIds: [],
+			}),
+		]);
+
+		return newThumbnailTest;
+	},
+});
+
+export const addComment = mutation({
+	args: {
+		testId: v.id("thumbnail_tests"),
+		text: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.auth.getUserIdentity();
+		if (!user) {
+			throw new Error("You must be logged in to comment");
+		}
+
+		const test = await ctx.db.get(args.testId);
+		if (!test) {
+			throw new Error("Test not found");
+		}
+
+		return await ctx.db.patch(args.testId, {
+			comments: [
+				{
+					userId: user.tokenIdentifier,
+					text: args.text,
+					createdAt: Date.now(),
+				},
+			].concat(test.comments ?? []),
 		});
 	},
 });
@@ -44,15 +92,9 @@ export const getRecentThumbnailTests = query({
 			.order("desc")
 			.paginate(args.paginationOpts);
 
-		const users = await Promise.all(
-			[...new Set(tests.page.map((test) => test.userId))].map((userId) =>
-				ctx.db
-					.query("users")
-					.withIndex("by_token", (q) =>
-						q.eq("tokenIdentifier", userId)
-					)
-					.unique()
-			)
+		const users = await getUsersByIdsUtil(
+			ctx,
+			tests.page.map((test) => test.userId)
 		);
 
 		return {

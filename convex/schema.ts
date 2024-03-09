@@ -13,6 +13,11 @@ export default defineSchema({
 			})
 		),
 		voterIds: v.optional(v.array(v.string())),
+    comments: v.optional(v.array(v.object({
+      userId: v.string(),
+      text: v.string(),
+      createdAt: v.number(),
+    }))),
 	}),
 	users: defineTable({
 		id: v.string(),
@@ -23,6 +28,7 @@ export default defineSchema({
 		pictureUrl: v.optional(v.string()),
 		subscriptionId: v.optional(v.string()),
 		subscriptionExpirey: v.optional(v.number()),
+    credits: v.optional(v.number()),
 	})
 		.index("by_token", ["tokenIdentifier"])
 		.index("by_userid", ["id"])

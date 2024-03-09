@@ -4,8 +4,12 @@ import {
 	QueryCtx,
 	internalMutation,
 	mutation,
+	query,
 } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
+import { getUsersByIdsUtil } from "./utils";
+
+const FREE_CREDITS = 5;
 
 export const createUser = internalMutation({
 	args: {
@@ -21,6 +25,7 @@ export const createUser = internalMutation({
 	handler: async (ctx, args) => {
 		return await ctx.db.insert("users", {
 			...args.user,
+			credits: FREE_CREDITS,
 		});
 	},
 });
@@ -30,14 +35,11 @@ export const isUserSubscribed = async (ctx: QueryCtx | MutationCtx) => {
 	if (!user) {
 		return false;
 	}
-	const dbUser = await ctx.db
-		.query("users")
-		.withIndex("by_token", (q) =>
-			q.eq("tokenIdentifier", user.tokenIdentifier)
-		)
-		.unique();
+	const dbUsers = await getUsersByIdsUtil(ctx, [user.tokenIdentifier]);
 
-	return dbUser?.subscriptionExpirey ?? 0 > Date.now();
+	return dbUsers.every(
+		(dbUser) => dbUser?.subscriptionExpirey ?? 0 > Date.now()
+	);
 };
 
 export const setSubscriptionId = internalMutation({
@@ -82,6 +84,15 @@ export const updateSubscriptionBySubId = internalMutation({
 			subscriptionId: args.subscriptionId,
 			subscriptionExpirey: args.subscriptionExpirey,
 		});
+	},
+});
+
+export const getUsersByIds = query({
+	args: {
+		userIds: v.array(v.string()),
+	},
+	handler: async (ctx, args) => {
+		return await getUsersByIdsUtil(ctx, args.userIds);
 	},
 });
 
@@ -130,6 +141,7 @@ export const store = mutation({
 			preferredUsername: identity.preferredUsername,
 			pictureUrl: identity.pictureUrl,
 			tokenIdentifier: identity.tokenIdentifier,
+			credits: FREE_CREDITS,
 		};
 		await ctx.db.insert("users", newUserData);
 		const createdUser = await ctx.db

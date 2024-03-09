@@ -10,6 +10,7 @@ import { alphabet } from "@/lib/contants";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@clerk/nextjs";
 import { Progress } from "@/components/ui/progress";
+import Comments from "./Comments";
 
 export default function ThumbnailTestPage() {
 	const params = useParams<{ testId: Id<"thumbnail_tests"> }>();
@@ -82,6 +83,7 @@ export default function ThumbnailTestPage() {
 							</div>
 						))}
 					</div>
+					<Comments thumbnailTest={thumbnailTest} />
 				</div>
 			) : (
 				<div>Loading...</div>

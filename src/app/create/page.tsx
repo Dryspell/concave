@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 import { getImageUrl } from "../../lib/utils";
 import { alphabet } from "@/lib/contants";
 import { isStorageIdResponse } from "./utils";
+import useDetailedMutation from "@/hooks/useDetailedMutation";
+import UpgradeSubscriptionButton from "@/components/UpgradeButton";
 
 const defaultErrors = (images: string[]) => {
 	const errors: Record<string, string> = {};
@@ -99,8 +101,34 @@ export default function CreatePage() {
 	const { toast } = useToast();
 	const router = useRouter();
 
-	const createThumbnailTest = useMutation(
-		api.thumbnail_tests.createThumbnailTest
+	const { mutate: createThumbnailTest } = useDetailedMutation(
+		api.thumbnail_tests.createThumbnailTest,
+		{
+			onSuccess: (thumbnailTestId) => {
+				toast({
+					title: "Test Created!",
+					description: `Thanks for creating a test!`,
+				});
+				router.push(`/tests/${thumbnailTestId}`);
+			},
+			onError: (error) => {
+				toast({
+					title: `Error creating test...`,
+					variant: "destructive",
+					description: (
+						<div>
+							{error.message}
+							<UpgradeSubscriptionButton />
+						</div>
+					),
+				});
+			},
+			onMutate: (params) => {
+				toast({
+					title: "Creating Test...",
+				});
+			},
+		}
 	);
 
 	useEffect(() => {
@@ -139,11 +167,10 @@ export default function CreatePage() {
 						return;
 					}
 
-					const thumbnailTestId = await createThumbnailTest({
+					createThumbnailTest({
 						title,
 						images,
 					});
-					router.push(`/tests/${thumbnailTestId}`);
 				}}
 			>
 				<div className="flex flex-col gap-4 mb-8">

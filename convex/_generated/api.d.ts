@@ -20,6 +20,7 @@ import type * as http from "../http.js";
 import type * as stripe from "../stripe.js";
 import type * as thumbnail_tests from "../thumbnail_tests.js";
 import type * as users from "../users.js";
+import type * as utils from "../utils.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   stripe: typeof stripe;
   thumbnail_tests: typeof thumbnail_tests;
   users: typeof users;
+  utils: typeof utils;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
